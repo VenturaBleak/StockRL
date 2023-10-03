@@ -1,43 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-</head>
-<body>
+# Trading Agent Repository
 
-<h1>Trading Agent Repository</h1>
+This repository consists of the implementation of a deep reinforcement learning (DRL) agent for stock trading. The agent interacts with a trading environment, makes decisions on where to invest, and learns from its actions to improve its performance.
 
-<p>This repository contains the necessary components to build and train a deep reinforcement learning agent for stock trading.</p>
+## File Descriptions
 
-<h2>File Descriptions:</h2>
-<ul>
-        <strong>agent.py</strong>
-        <p>This file contains the implementation of the deep Q-learning agent and the replay buffer used for experience replay.</p>
+### `environment.py`
 
-        <strong>data.py</strong>
-        <p>Handles data preprocessing and other data-related tasks to make the stock data usable by the agent and environment.</p>
+The `environment.py` script defines the `TradingEnvironment` class which simulates a trading scenario for the agent. This class is an adaptation of the OpenAI Gym's environment class and provides the framework where the agent can interact, perform actions, and receive feedback.
 
-        <strong>environment.py</strong>
-        <p>Describes the trading environment. This is where the agent interacts, makes decisions, and receives feedback in the form of rewards or penalties. It's based on the OpenAI Gym environment class.</p>
+- **`reset()`**: Resets the environment to its initial state and returns the initial state.
+- **`step(action)`**: Executes the specified action and returns the next state, reward, the completion status, and logging details.
+- **`action_space()`**: Returns the action space of the environment, which comprises two actions: investing in savings or in stocks.
+- **`observation_space()`**: Offers the current state of the environment, detailing features like the quarter of the year, adjusted closing prices, and their moving averages.
 
-        <strong>main.py</strong>
-        <p>The entry point for running the training loop. It initializes the environment and agent, and then proceeds with the training process.</p>
+### `agent.py`
 
-        <strong>model.py</strong>
-        <p>Contains the neural network architecture for the Q-learning algorithm.</p>
+The `agent.py` script introduces both the `ReplayBuffer` and the `DQNAgent` classes:
 
-        <strong>retrieve_savings_data.py</strong>
-        <p>A script responsible for fetching and possibly preprocessing the savings rate data.</p>
+- **`ReplayBuffer`**: It's a data structure used for storing past experiences, allowing the agent to learn from previous actions.
+- **`DQNAgent`**: Represents the DRL agent. This agent uses a deep Q-network to evaluate actions, choose them based on an epsilon-greedy policy, store experiences in the replay buffer, and learn by updating its Q-values from batches of experiences.
 
-        <strong>retrieve_stock_data.py</strong>
-        <p>A script that fetches stock data. This is essential for the environment to provide the agent with stock prices and other related information.</p>
+### `train.py`
 
-        <strong>train.py</strong>
-        <p>Contains the training loop where the agent learns by interacting with the environment over multiple episodes.</p>
-    
-</ul>
+In `train.py`, the main training loop for the agent is established. The `train()` function orchestrates the agent's interactions with the environment, storage of experiences, and learning from these experiences. The function also manages the agent's exploration vs. exploitation balance through the epsilon decay process.
 
-<p>For more detailed information on each component or any further instructions, please refer to the comments inside each script.</p>
+### `main.py`
 
-</body>
-</html>
+The `main.py` script serves as the entry point for running the entire simulation. This script:
+1. Sets the device preference (CPU or CUDA).
+2. Loads the stock data.
+3. Initializes the trading environment.
+4. Establishes the DQNAgent with the appropriate input and output dimensions.
+5. Triggers the training process for the agent.
+
+## Additional Files
+
+- `model.py`: This script holds the neural network architecture used for evaluating Q-values in the DRL agent.
+- `data.py`: Responsible for preprocessing and managing data-related tasks.
+- `retrieve_savings_data.py`: A script to fetch and preprocess the savings rate data.
+- `retrieve_stock_data.py`: A script to source and preprocess the stock data.
+
+## Usage
+
+To run the agent's training process, simply execute the `main.py` script. Make sure all the required dependencies are installed, and the necessary data files are available in the data directory.
+
+---
+
+For more detailed insights or specific instructions, delve into the comments within each individual script.
