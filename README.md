@@ -1,4 +1,4 @@
-# Trading Agent Repository
+# StockRL - AI Based RL Trading Agent Repository
 
 This repository consists of the implementation of a deep reinforcement learning (DRL) agent for stock trading. The agent interacts with a trading environment, makes decisions on where to invest, and learns from its actions to improve its performance.
 
