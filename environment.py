@@ -9,11 +9,9 @@ The TradingEnvironment class is based on the OpenAI Gym environment class. It im
 """
 import pandas as pd
 import os
-
-
+import numpy as np
 import pandas as pd
 import torch
-
 
 class TradingEnvironment:
     def __init__(self, stock_data, initial_portfolio_value=10000, look_back_days=30, device=torch.device("cpu")):
@@ -29,7 +27,7 @@ class TradingEnvironment:
 
     def reset(self):
         self.portfolio_value = self.initial_portfolio_value
-        self.current_step = self.look_back_days
+        self.current_step = np.random.randint(self.look_back_days, len(self.stock_data) - self.look_back_days)
         self.stock_quantity = 0
         self.asset_class = 'A'
         self.done = False
