@@ -11,9 +11,17 @@ import pandas as pd
 import os
 
 
+import pandas as pd
+import torch
+
+
 class TradingEnvironment:
-    def __init__(self, stock_data, initial_portfolio_value=10000, look_back_days=30):
+    def __init__(self, stock_data, initial_portfolio_value=10000, look_back_days=30, device=torch.device("cpu")):
+        self.device = device
+
         self.stock_data = stock_data
+        self.stock_data_tensor = torch.tensor(stock_data.values).to(self.device)
+        self.columns = stock_data.columns.tolist()
         self.look_back_days = look_back_days
         self.initial_portfolio_value = initial_portfolio_value
         self.portfolio_value = initial_portfolio_value
@@ -23,12 +31,12 @@ class TradingEnvironment:
         self.portfolio_value = self.initial_portfolio_value
         self.current_step = self.look_back_days
         self.stock_quantity = 0
-        self.asset_class = 'A'  # Initially invest in asset class A
+        self.asset_class = 'A'
         self.done = False
         return self.get_state()
 
     def get_state(self):
-        state = self.stock_data.iloc[self.current_step].to_dict()
+        state = {self.columns[i]: self.stock_data_tensor[self.current_step, i].item() for i in range(len(self.columns))}
         state['position'] = 0 if self.stock_quantity == 0 else 1
         state['portfolio_value'] = self.portfolio_value if self.stock_quantity == 0 else self.stock_quantity * state['Adj Close']
         return state
@@ -91,18 +99,18 @@ class TradingEnvironment:
         investment_asset_class_B = self.stock_quantity * self.stock_data['Adj Close'].values[
             self.current_step] if self.asset_class == 'B' else 0
 
-        log_df = pd.DataFrame({
-            'Step': [self.current_step],
-            'Savings Investment': [investment_asset_class_A],
-            'Stock Investment': [investment_asset_class_B],
-            'Daily Return': [daily_return],
-            'Weekly Return': [weekly_return],
-            'Yearly Return': [yearly_return],
-            'Portfolio Value': [current_portfolio_value],
-            'Financial Return': [financial_return]
-        })
+        log_dict = {
+            'Step': self.current_step,
+            'Savings Investment': investment_asset_class_A,
+            'Stock Investment': investment_asset_class_B,
+            'Daily Return': daily_return,
+            'Weekly Return': weekly_return,
+            'Yearly Return': yearly_return,
+            'Portfolio Value': current_portfolio_value,
+            'Financial Return': financial_return
+        }
 
-        return self.get_state(), reward, self.done, log_df
+        return self.get_state(), reward, self.done, log_dict
 
     def action_space(self):
         """Return the action space of the environment.
@@ -169,14 +177,23 @@ if __name__ == "__main__":
     env = TradingEnvironment(stock_data)
     state = env.reset()
     action = 0
-    next_state, reward, done, log_df = env.step(action)
-    print(log_df)
-    action = 1
-    next_state, reward, done, log_df = env.step(action)
-    print(log_df)
-    action = 1
-    next_state, reward, done, log_df = env.step(action)
-    print(log_df)
-    action = 1
-    next_state, reward, done, log_df = env.step(action)
-    print(log_df)
+    next_state, reward, done, log_dict = env.step(action)
+    print(log_dict)
+    action = 0
+    next_state, reward, done, log_dict = env.step(action)
+    print(log_dict)
+    action = 0
+    next_state, reward, done, log_dict = env.step(action)
+    print(log_dict)
+    action = 0
+    next_state, reward, done, log_dict = env.step(action)
+    print(log_dict)
+    action = 0
+    next_state, reward, done, log_dict = env.step(action)
+    print(log_dict)
+    action = 0
+    next_state, reward, done, log_dict = env.step(action)
+    print(log_dict)
+    action = 0
+    next_state, reward, done, log_dict = env.step(action)
+    print(log_dict)

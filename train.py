@@ -21,7 +21,6 @@ def train(agent, env, episodes=1000):
             next_observation = env.observation_space()
             agent.learn(observation, action, reward, next_observation)
             observation = next_observation
-            print(log_df)
         epsilon *= 0.995
         if episode % 100 == 0:
             print(f"Episode {episode} completed.", log_df)
