@@ -7,11 +7,11 @@ The TradingEnvironment class is based on the OpenAI Gym environment class. It im
 - action_space(): Return the action space of the environment.
 - observation_space(): Return the observation space of the environment.
 """
-import pandas as pd
 import os
 import numpy as np
 import pandas as pd
 import torch
+import numpy_financial as npf
 
 class TradingEnvironment:
     def __init__(self, stock_data, initial_portfolio_value=10000, look_back_days=30, device=torch.device("cpu")):
@@ -28,10 +28,16 @@ class TradingEnvironment:
     def reset(self):
         self.portfolio_value = self.initial_portfolio_value
         self.current_step = np.random.randint(self.look_back_days, len(self.stock_data) - self.look_back_days)
+        self.initial_step = self.current_step
+        self.steps_elapsed = 0
         self.stock_quantity = 0
         self.asset_class = 'A'
         self.done = False
+        self.initial_investment = -self.portfolio_value  # Record the initial investment as a negative value
+        self.total_actions = {'Invest in A': 0, 'Invest in B': 0}
         return self.get_state()
+
+    # And inside the step() method, adjust the IRR calculation as follows:
 
     def get_state(self):
         state = {self.columns[i]: self.stock_data_tensor[self.current_step, i].item() for i in range(len(self.columns))}
@@ -50,6 +56,7 @@ class TradingEnvironment:
 
         # Action 0: Invest in A (Savings)
         if action == 0:
+            self.total_actions['Invest in A'] += 1
             if self.asset_class != 'A':
                 self.portfolio_value += self.stock_quantity * self.stock_data['Adj Close'].values[self.current_step]
                 self.stock_quantity = 0
@@ -60,6 +67,7 @@ class TradingEnvironment:
 
         # Action 1: Invest in B (Stock)
         elif action == 1:
+            self.total_actions['Invest in B'] += 1
             if self.asset_class != 'B':
                 self.portfolio_value += self.stock_quantity * self.stock_data['Adj Close'].values[self.current_step]
                 self.stock_quantity = 0
@@ -78,19 +86,14 @@ class TradingEnvironment:
         current_portfolio_value = self.get_state()['portfolio_value']
         reward = current_portfolio_value - prev_portfolio_value
 
-        # Calculate returns, for human interpretabilty
-        daily_return = reward / prev_portfolio_value
-        if self.current_step >= 5:
-            weekly_return = (self.stock_data['Adj Close'].values[self.current_step] - self.stock_data['Adj Close'].values[self.current_step - 5]) / self.stock_data['Adj Close'].values[self.current_step - 5]
-        else:
-            weekly_return = 0
-        if self.current_step >= 252:
-            yearly_return = (self.stock_data['Adj Close'].values[self.current_step] - self.stock_data['Adj Close'].values[self.current_step - 252]) / self.stock_data['Adj Close'].values[self.current_step - 252]
-        else:
-            yearly_return = 0
-
-        # Calculate the financial return, for human interpretabilty
-        financial_return = (current_portfolio_value - self.initial_portfolio_value) / self.initial_portfolio_value
+        # Calculate the IRR based on initial investment and current portfolio value:
+        try:
+            self.steps_elapsed = self.current_step - self.initial_step  # Compute the number of days from step 0 to the current step
+            annualization_factor = 252 / self.steps_elapsed  # Adjust the annualization based on days elapsed
+            irr = (1 + npf.irr(
+                [self.initial_investment, self.get_state()['portfolio_value']])) ** annualization_factor - 1
+        except ValueError:  # In case IRR can't be computed
+            irr = 0.0
 
         # Create log dataframe
         investment_asset_class_A = self.portfolio_value if self.asset_class == 'A' else 0
@@ -98,14 +101,12 @@ class TradingEnvironment:
             self.current_step] if self.asset_class == 'B' else 0
 
         log_dict = {
-            'Step': self.current_step,
+            'Steps Elapsed': self.steps_elapsed,
+            'Action Distribution': self.total_actions,
+            'Portfolio Value': current_portfolio_value,
             'Savings Investment': investment_asset_class_A,
             'Stock Investment': investment_asset_class_B,
-            'Daily Return': daily_return,
-            'Weekly Return': weekly_return,
-            'Yearly Return': yearly_return,
-            'Portfolio Value': current_portfolio_value,
-            'Financial Return': financial_return
+            'IRR': irr
         }
 
         return self.get_state(), reward, self.done, log_dict

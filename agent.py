@@ -23,22 +23,25 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.buffer)
 
-
 class DQNAgent:
     def __init__(self, input_dim, output_dim, learning_rate=1e-3, device=torch.device("cpu"), buffer_capacity=10000,
                  batch_size=64):
         self.device = device
         self.q_network = DQN(input_dim, output_dim).to(self.device)
 
-        # debug the following line
+        # Print the model summary
         torchinfo.summary(self.q_network, input_size=(input_dim,))
 
+        # Initialize the optimizer and loss function
         self.optimizer = optim.Adam(self.q_network.parameters(), lr=learning_rate)
         self.criterion = torch.nn.MSELoss()
 
         # Initialize Replay Buffer
         self.buffer = ReplayBuffer(buffer_capacity)
         self.batch_size = batch_size
+
+        # Initialize the total number of updates
+        self.total_updates = 0
 
     def choose_action(self, observation, epsilon):
         if np.random.random() < epsilon:
@@ -57,6 +60,7 @@ class DQNAgent:
         if len(self.buffer) < self.batch_size:
             return
 
+        self.total_updates += 1
         batch = self.buffer.sample(self.batch_size)
         states, actions, rewards, next_states = zip(*batch)
 
@@ -83,3 +87,7 @@ class DQNAgent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+    def get_learning_rate(self):
+        for param_group in self.optimizer.param_groups:
+            return param_group['lr']
