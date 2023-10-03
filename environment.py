@@ -103,7 +103,6 @@ class TradingEnvironment:
         })
 
         return self.get_state(), reward, self.done, log_df
-        # log the information in a 1 row df: step, asset A investment (savings), asset B investment (ticker), daily return, weekly return, yearly return, portfolio value, financial_return
 
     def action_space(self):
         """Return the action space of the environment.

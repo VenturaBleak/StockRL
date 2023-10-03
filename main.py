@@ -10,9 +10,8 @@ if __name__ == "__main__":
     env = TradingEnvironment(stock_data)
 
     input_dim = len(env.observation_space())
-    print("input_dim", input_dim)
     output_dim = len(env.action_space())
-    print("output_dim", output_dim)
+    print(f"Input dimension: {input_dim};", f"Output dimension: {output_dim}")
 
     agent = DQNAgent(input_dim, output_dim)
     train(agent, env, episodes=1000)
